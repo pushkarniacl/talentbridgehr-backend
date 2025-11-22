@@ -5,6 +5,9 @@ import { validateRequest } from "../../middleware/validate.middleware.js";
 
 const router = Router();
 
+/**
+ * Register
+ */
 router.post(
   "/register",
   [
@@ -16,6 +19,9 @@ router.post(
   authController.register
 );
 
+/**
+ * Login → returns accessToken + sets refreshToken cookie
+ */
 router.post(
   "/login",
   [
@@ -25,5 +31,15 @@ router.post(
   validateRequest,
   authController.login
 );
+
+/**
+ * Refresh → uses HttpOnly cookie to return a new access token
+ */
+router.post("/refresh", authController.refreshToken);
+
+/**
+ * Logout → clears refresh token cookie
+ */
+router.post("/logout", authController.logout);
 
 export default router;
