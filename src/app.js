@@ -14,24 +14,20 @@ import jobRoutes from "./modules/job/job.routes.js";
 import applicationRoutes from "./modules/application/application.routes.js";
 
 const app = express();
-
+app.set("trust proxy", 1);// REQUIRED FOR RAILWAY + RATE LIMITER
 app.use(helmet());
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://talentbridgehr-frontend.vercel.app"
-];
-
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl)
-      if (!origin) return callback(null, true);
+      const allowedOrigins = [
+        "http://localhost:3000",
+        "https://talentbridgehr-frontend.vercel.app"
+      ];
 
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
       }
+      return callback(new Error(`CORS error: Origin ${origin} not allowed`));
     },
     credentials: true
   })
