@@ -19,38 +19,39 @@ const app = express();
 // Required for Railway proxy + correct IPs + rate limiter
 app.set("trust proxy", 1);
 
-// Security headers
-app.use(helmet());
-
 // Allowed frontend origins
 const allowedOrigins = [
   "http://localhost:3000",
   "https://talentbridgehr-frontend.vercel.app"
 ];
 
-// CORS
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow server-to-server & curl (no origin)
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error(`CORS error: Origin ${origin} not allowed`));
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-  })
-);
+// CORS OPTIONS (used for both main CORS and preflight)
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow server-to-server & curl (no origin)
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS error: Origin ${origin} not allowed`));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+};
 
-// Very important — handle preflight requests
-app.options("*", cors());
+// CORS MUST COME BEFORE HELMET
+app.use(cors(corsOptions));
 
-// Parse JSON
+// Very important — handle preflight requests with SAME CORS config
+app.options("*", cors(corsOptions));
+
+// Security headers
+app.use(helmet());
+
+// Parse JSON body
 app.use(express.json({ limit: "5mb" }));
 
-// Parse cookies for refresh tokens
+// Parse cookies (needed for refresh token)
 app.use(cookieParser());
 
 // Logging
@@ -63,13 +64,13 @@ app.use(
 // Rate limiter (after logging, before routes)
 app.use(apiRateLimiter);
 
-// Mount routes
+// Routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/clients", clientRoutes);
 app.use("/api/v1/jobs", jobRoutes);
 
-// Nested applications route: /api/v1/jobs/:jobId/applications
+// Nested applications route
 app.use("/api/v1/jobs/:jobId/applications", applicationRoutes);
 app.use("/api/v1/applications", applicationRoutes);
 
