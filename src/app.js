@@ -16,10 +16,13 @@ import applicationRoutes from "./modules/application/application.routes.js";
 const app = express();
 
 app.use(helmet());
-app.use(cors({
-origin: "https://talentbridgehr-frontend.vercel.app",
-  methods: "GET,POST,PUT,DELETE",
-}));app.use(express.json({ limit: "5mb" }));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_ORIGIN,
+    credentials: true
+  })
+);
+app.use(express.json({ limit: "5mb" }));
 app.use(morgan("combined", { stream: { write: (msg) => logger.info(msg.trim()) } }));
 app.use(apiRateLimiter);
 
