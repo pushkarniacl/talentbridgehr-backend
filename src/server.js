@@ -2,6 +2,9 @@ import app from "./app.js";
 import { config } from "./config/index.js";
 import prisma from "./config/database.js";
 import { logger } from "./utils/logger.js";
+import cookieParser from "cookie-parser";
+app.set("trust proxy", 1);
+app.use(cookieParser());
 
 const start = async () => {
   try {
