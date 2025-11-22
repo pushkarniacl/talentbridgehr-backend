@@ -16,12 +16,27 @@ import applicationRoutes from "./modules/application/application.routes.js";
 const app = express();
 
 app.use(helmet());
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://talentbridgehr-frontend.vercel.app"
+];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_ORIGIN,
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true
   })
 );
+
 app.use(express.json({ limit: "5mb" }));
 app.use(morgan("combined", { stream: { write: (msg) => logger.info(msg.trim()) } }));
 app.use(apiRateLimiter);
